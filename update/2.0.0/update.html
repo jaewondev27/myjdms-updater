@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>소프트웨어 업데이트</title>
+
+    <script src="https://cdn.jsdelivr.net/gh/jaewondev27/one-ui-8-loader/galaxy-loader.js"></script>
+
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #ffffff;
+            font-family: -apple-system, sans-serif;
+            overflow: hidden;
+        }
+
+        /* 업데이트 확인 화면 스타일 */
+        #setup-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .setup-text {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: #000;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-cancel {
+            background-color: #eeeeee;
+            color: #444;
+        }
+
+        .btn-confirm {
+            background-color: #007aff;
+            color: #fff;
+        }
+
+        /* 업데이트 진행 화면 (처음에는 숨김) */
+        #update-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        galaxy-loader {
+            margin-bottom: 20px;
+            transform: scale(0.8);
+        }
+
+        .progress-wrapper {
+            width: 240px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .percent-text {
+            font-size: 14px;
+            color: #007aff;
+            font-weight: bold;
+            margin-bottom: 8px;
+            align-self: flex-end;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background-color: #eeeeee;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #55efc4, #74b9ff);
+            transition: width 0.4s ease-out;
+        }
+
+        .status-text {
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="setup-container">
+        <div class="setup-text">
+  최신버전이 있습니다.<br>
+  업데이트를 할까요?
+</div>
+        <div class="btn-group">
+            <button class="btn btn-cancel" onclick="cancelUpdate()">취소</button>
+            <button class="btn btn-confirm" onclick="startUpdate()">확인</button>
+        </div>
+    </div>
+
+    <div id="update-container">
+        <galaxy-loader size="3" speed="3"></galaxy-loader>
+
+        <div class="progress-wrapper">
+            <div class="percent-text" id="percent-num">0%</div>
+            <div class="progress-container">
+                <div id="myBar" class="progress-bar"></div>
+            </div>
+            <div class="status-text" id="status-title">업데이트 중...</div>
+        </div>
+    </div>
+
+    <script>
+        let currentProgress = 0;
+        const bar = document.getElementById("myBar");
+        const percentNum = document.getElementById("percent-num");
+        const statusTitle = document.getElementById("status-title");
+
+        function cancelUpdate() {
+            window.parent.postMessage({ type: 'cancelUpdate' }, '*');
+        }
+
+        function startUpdate() {
+            window.parent.postMessage({ type: 'startUpdate' }, '*');
+            document.getElementById('setup-container').style.display = 'none';
+            document.getElementById('update-container').style.display = 'flex';
+        }
+
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'progress') {
+                updateProgressReal(event.data.progress, event.data.status);
+            } else if (event.data && event.data.type === 'complete') {
+                updateComplete(event.data.success, event.data.message);
+            }
+        });
+
+        function updateProgressReal(progress, status) {
+            bar.style.width = progress + '%';
+            percentNum.innerText = progress + '%';
+            if (status) {
+                statusTitle.innerText = status;
+            }
+        }
+
+        function updateComplete(success, message) {
+            if (success) {
+                statusTitle.innerText = "업데이트 완료";
+                percentNum.style.color = "#00d593";
+                window.parent.postMessage({ type: 'updateFinished' }, '*');
+            } else {
+                statusTitle.innerText = "업데이트 실패";
+                percentNum.style.color = "#f04452";
+                alert(message);
+            }
+        }
+    </script>
+
+</body>
+</html>
