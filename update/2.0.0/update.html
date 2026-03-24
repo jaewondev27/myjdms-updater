@@ -174,7 +174,10 @@
             if (success) {
                 statusTitle.innerText = "업데이트 완료";
                 percentNum.style.color = "#00d593";
-                window.parent.postMessage({ type: 'updateFinished' }, '*');
+                // 업데이트 완료 후 4 초 기다렸다가 종료 (완료 메시지 보여줌)
+                setTimeout(() => {
+                    window.parent.postMessage({ type: 'updateFinished' }, '*');
+                }, 4000);
             } else {
                 statusTitle.innerText = "업데이트 실패";
                 percentNum.style.color = "#f04452";
