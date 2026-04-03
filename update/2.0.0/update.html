@@ -2,189 +2,204 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>소프트웨어 업데이트</title>
-
-    <script src="https://cdn.jsdelivr.net/gh/jaewondev27/one-ui-8-loader/galaxy-loader.js"></script>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>앱 업데이트</title>
+    <script src="https://cdn.jsdelivr.net/gh/jaewondev27/one-ui-8-loader/oneui8-loader.js"></script>
     <style>
-        body, html {
+        :root {
+            --samsung-blue: #007aff;
+            --bg-gray: #f4f4f4;
+            --text-main: #1a1a1a;
+        }
+
+        body {
             margin: 0;
             padding: 0;
-            width: 100%;
-            height: 100%;
+            font-family: "Samsung One", "Segoe UI", sans-serif;
+            background-color: var(--bg-gray);
+            height: 100vh;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-            background-color: #ffffff;
-            font-family: -apple-system, sans-serif;
             overflow: hidden;
         }
 
-        /* 업데이트 확인 화면 스타일 */
-        #setup-container {
+        /* 1. 커스텀 모달 (중앙 상단 배치) */
+        #updateModal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4);
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            width: 85%;
+            max-width: 340px;
+            border-radius: 28px;
+            padding: 28px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
             text-align: center;
+            transform: translateY(-15%); /* 모달 위치 상향 */
         }
 
-        .setup-text {
-            font-size: 22px;
-            font-weight: 600;
-            margin-bottom: 30px;
-            color: #000;
+        .modal-title { font-size: 20px; font-weight: 600; margin-bottom: 12px; color: var(--text-main); }
+        .modal-body { font-size: 15px; color: #555; margin-bottom: 28px; line-height: 1.5; }
+        
+        .modal-buttons { display: flex; gap: 10px; }
+        .modal-btn {
+            flex: 1; padding: 14px; border: none; border-radius: 22px;
+            font-size: 15px; font-weight: 600; cursor: pointer;
         }
+        .btn-cancel { background: #eee; color: #000; }
+        .btn-confirm { background: var(--samsung-blue); color: white; }
 
-        .btn-group {
-            display: flex;
-            gap: 12px;
-        }
-
-        .btn {
-            padding: 12px 30px;
-            border-radius: 25px;
-            font-size: 15px;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-
-        .btn-cancel {
-            background-color: #eeeeee;
-            color: #444;
-        }
-
-        .btn-confirm {
-            background-color: #007aff;
-            color: #fff;
-        }
-
-        /* 업데이트 진행 화면 (처음에는 숨김) */
-        #update-container {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        galaxy-loader {
-            margin-bottom: 20px;
-            transform: scale(0.8);
-        }
-
-        .progress-wrapper {
-            width: 240px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .percent-text {
-            font-size: 14px;
-            color: #007aff;
-            font-weight: bold;
-            margin-bottom: 8px;
-            align-self: flex-end;
-        }
-
-        .progress-container {
+        /* 2. 업데이트 메인 화면 */
+        .update-container {
             width: 100%;
-            height: 6px;
-            background-color: #eeeeee;
-            border-radius: 3px;
-            overflow: hidden;
-            margin-bottom: 15px;
-        }
-
-        .progress-bar {
-            width: 0%;
+            max-width: 450px;
             height: 100%;
-            background: linear-gradient(90deg, #55efc4, #74b9ff);
-            transition: width 0.4s ease-out;
+            background: white;
+            display: none; 
+            flex-direction: column;
+            padding: 80px 24px;
+            box-sizing: border-box;
         }
 
-        .status-text {
-            font-size: 14px;
-            font-weight: 500;
-            color: #666;
-            margin: 0;
+        .header-title { font-size: 26px; font-weight: 600; text-align: center; margin-bottom: 8px; color: var(--text-main); }
+        .header-subtitle { font-size: 14px; color: #666; text-align: center; margin-bottom: 60px; }
+
+        /* 로딩 애니메이션 고정 */
+        .loader-wrapper { margin: 40px auto; display: flex; justify-content: center; align-items: center; }
+        oneui8-loader { animation: none !important; transform: rotate(0deg) !important; }
+
+        /* 하단 상태 영역 */
+        .status-container { margin-top: auto; padding-bottom: 60px; }
+        .phase-label { font-size: 14px; font-weight: 600; color: var(--samsung-blue); margin-bottom: 8px; }
+        .percent-text { font-size: 56px; font-weight: 300; margin-bottom: 15px; color: var(--text-main); }
+
+        .progress-track { width: 100%; height: 6px; background: #f0f0f0; border-radius: 10px; overflow: hidden; }
+        .progress-fill {
+            width: 0%; height: 100%;
+            background: linear-gradient(90deg, #007aff, #00c6ff);
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
+        .info-text { font-size: 13px; color: #888; margin-top: 15px; }
     </style>
 </head>
 <body>
 
-    <div id="setup-container">
-        <div class="setup-text">
-  최신버전이 있습니다.<br>
-  업데이트를 할까요?
+<div id="updateModal">
+    <div class="modal-content">
+        <div class="modal-title">앱 업데이트</div>
+        <div class="modal-body">새로운 기능과 개선사항이 포함된<br>업데이트를 설치하시겠습니까?</div>
+        <div class="modal-buttons">
+            <button class="modal-btn btn-cancel" onclick="location.reload()">나중에</button>
+            <button class="modal-btn btn-confirm" onclick="startUpdateProcess()">업데이트</button>
+        </div>
+    </div>
 </div>
-        <div class="btn-group">
-            <button class="btn btn-cancel" onclick="cancelUpdate()">취소</button>
-            <button class="btn btn-confirm" onclick="startUpdate()">확인</button>
-        </div>
+
+<div class="update-container" id="updateUI">
+    <div class="header-title" id="mainTitle">앱 업데이트 중...</div>
+    <div class="header-subtitle" id="subTitle">최적의 성능을 위해 잠시만 기다려 주세요.</div>
+
+    <div class="loader-wrapper">
+        <oneui8-loader size="4" speed="3.0"></oneui8-loader>
     </div>
 
-    <div id="update-container">
-        <galaxy-loader size="3" speed="3"></galaxy-loader>
-
-        <div class="progress-wrapper">
-            <div class="percent-text" id="percent-num">0%</div>
-            <div class="progress-container">
-                <div id="myBar" class="progress-bar"></div>
-            </div>
-            <div class="status-text" id="status-title">업데이트 중...</div>
+    <div class="status-container">
+        <div id="phaseLabel" class="phase-label">다운로드 중</div>
+        <div class="percent-text"><span id="percent">0</span>%</div>
+        <div class="progress-track">
+            <div class="progress-fill" id="progressBar"></div>
         </div>
+        <div id="infoLabel" class="info-text">업데이트 파일을 안전하게 가져오고 있습니다.</div>
     </div>
+</div>
 
-    <script>
-        let currentProgress = 0;
-        const bar = document.getElementById("myBar");
-        const percentNum = document.getElementById("percent-num");
-        const statusTitle = document.getElementById("status-title");
+<script>
+    const modal = document.getElementById('updateModal');
+    const updateUI = document.getElementById('updateUI');
+    const percentText = document.getElementById('percent');
+    const progressBar = document.getElementById('progressBar');
+    const phaseLabel = document.getElementById('phaseLabel');
+    const infoLabel = document.getElementById('infoLabel');
+    const mainTitle = document.getElementById('mainTitle');
 
-        function cancelUpdate() {
-            window.parent.postMessage({ type: 'cancelUpdate' }, '*');
-        }
+    let newVersion = '';
+    let currentVersion = '';
 
-        function startUpdate() {
-            window.parent.postMessage({ type: 'startUpdate' }, '*');
-            document.getElementById('setup-container').style.display = 'none';
-            document.getElementById('update-container').style.display = 'flex';
-        }
+    if (typeof Android !== 'undefined' && Android.setVersions) {
+        Android.setVersions('', '');
+    }
 
-        window.addEventListener('message', function(event) {
-            if (event.data && event.data.type === 'progress') {
-                updateProgressReal(event.data.progress, event.data.status);
-            } else if (event.data && event.data.type === 'complete') {
-                updateComplete(event.data.success, event.data.message);
-            }
+    window.setVersions = function(newVer, currentVer) {
+        newVersion = newVer;
+        currentVersion = currentVer;
+    };
+
+    function startUpdateProcess() {
+        modal.style.display = 'none';
+        updateUI.style.display = 'flex';
+
+        runPhase("download", 0, () => {
+            setTimeout(() => {
+                runPhase("install", 0, () => {
+                    if (typeof Android !== 'undefined' && Android.saveVersion) {
+                        Android.saveVersion(newVersion);
+                    }
+                    setTimeout(() => {
+                        phaseLabel.innerText = "완료됨";
+                        infoLabel.innerText = "업데이트가 성공적으로 완료되었습니다.";
+                        infoLabel.style.color = "#007aff";
+                        setTimeout(() => {
+                            if (typeof Android !== 'undefined' && Android.restartApp) {
+                                Android.restartApp();
+                            }
+                        }, 1000);
+                    }, 500);
+                });
+            }, 800);
         });
+    }
 
-        function updateProgressReal(progress, status) {
-            bar.style.width = progress + '%';
-            percentNum.innerText = progress + '%';
-            if (status) {
-                statusTitle.innerText = status;
-            }
+    function runPhase(type, startVal, callback) {
+        let progress = startVal;
+
+        if (type === "download") {
+            phaseLabel.innerText = "다운로드 중";
+            infoLabel.innerText = "패키지 데이터를 다운로드하는 중입니다...";
+        } else {
+            phaseLabel.innerText = "설치 중";
+            infoLabel.innerText = "시스템에 업데이트를 적용하고 있습니다...";
+            mainTitle.innerText = "앱 설치 중...";
         }
 
-        function updateComplete(success, message) {
-            if (success) {
-                statusTitle.innerText = "업데이트 완료";
-                percentNum.style.color = "#00d593";
-                // 업데이트 완료 후 4 초 기다렸다가 종료 (완료 메시지 보여줌)
-                setTimeout(() => {
-                    window.parent.postMessage({ type: 'updateFinished' }, '*');
-                }, 4000);
+        const interval = setInterval(() => {
+            progress += Math.floor(Math.random() * 4) + 1;
+
+            if (progress >= 100) {
+                progress = 100;
+                clearInterval(interval);
+
+                percentText.innerText = progress;
+                progressBar.style.width = progress + '%';
+
+                if (callback) {
+                    callback();
+                }
             } else {
-                statusTitle.innerText = "업데이트 실패";
-                percentNum.style.color = "#f04452";
-                alert(message);
+                percentText.innerText = progress;
+                progressBar.style.width = progress + '%';
             }
-        }
-    </script>
+        }, type === "download" ? 80 : 120);
+    }
+</script>
 
 </body>
 </html>
