@@ -37,13 +37,12 @@
 
         .modal-content {
             background: white;
-            width: 85%;
+            width: calc(100% - 48px);
             max-width: 340px;
             border-radius: 28px;
             padding: 28px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.15);
             text-align: center;
-            transform: translateY(-15%); /* 모달 위치 상향 */
         }
 
         .modal-title { font-size: 20px; font-weight: 600; margin-bottom: 12px; color: var(--text-main); }
@@ -98,7 +97,7 @@
         <div class="modal-title">앱 업데이트</div>
         <div class="modal-body">새로운 기능과 개선사항이 포함된<br>업데이트를 설치하시겠습니까?</div>
         <div class="modal-buttons">
-            <button class="modal-btn btn-cancel" onclick="location.reload()">나중에</button>
+            <button class="modal-btn btn-cancel" onclick="closeModal()">취소</button>
             <button class="modal-btn btn-confirm" onclick="startUpdateProcess()">업데이트</button>
         </div>
     </div>
@@ -134,8 +133,10 @@
     let newVersion = '';
     let currentVersion = '';
 
-    if (typeof Android !== 'undefined' && Android.setVersions) {
-        Android.setVersions('', '');
+    function closeModal() {
+        if (typeof Android !== 'undefined' && Android.closeUpdate) {
+            Android.closeUpdate();
+        }
     }
 
     window.setVersions = function(newVer, currentVer) {
@@ -147,57 +148,41 @@
         modal.style.display = 'none';
         updateUI.style.display = 'flex';
 
-        runPhase("download", 0, () => {
-            setTimeout(() => {
-                runPhase("install", 0, () => {
-                    if (typeof Android !== 'undefined' && Android.saveVersion) {
-                        Android.saveVersion(newVersion);
-                    }
-                    setTimeout(() => {
-                        phaseLabel.innerText = "완료됨";
-                        infoLabel.innerText = "업데이트가 성공적으로 완료되었습니다.";
-                        infoLabel.style.color = "#007aff";
-                        setTimeout(() => {
-                            if (typeof Android !== 'undefined' && Android.restartApp) {
-                                Android.restartApp();
-                            }
-                        }, 1000);
-                    }, 500);
-                });
-            }, 800);
-        });
+        if (typeof Android !== 'undefined' && Android.downloadFiles) {
+            Android.downloadFiles(newVersion);
+        }
     }
 
-    function runPhase(type, startVal, callback) {
-        let progress = startVal;
-
-        if (type === "download") {
-            phaseLabel.innerText = "다운로드 중";
-            infoLabel.innerText = "패키지 데이터를 다운로드하는 중입니다...";
-        } else {
-            phaseLabel.innerText = "설치 중";
-            infoLabel.innerText = "시스템에 업데이트를 적용하고 있습니다...";
-            mainTitle.innerText = "앱 설치 중...";
+    function updateProgress(percent, phase) {
+        percentText.innerText = percent;
+        progressBar.style.width = percent + '%';
+        if (phase === 'download') {
+            phaseLabel.innerText = '다운로드 중';
+            infoLabel.innerText = '업데이트 파일을 다운로드하는 중입니다...';
+        } else if (phase === 'install') {
+            phaseLabel.innerText = '설치 중';
+            infoLabel.innerText = '파일을 적용하고 있습니다...';
+            mainTitle.innerText = '앱 설치 중...';
+        } else if (phase === 'complete') {
+            phaseLabel.innerText = '완료됨';
+            infoLabel.innerText = '업데이트가 성공적으로 완료되었습니다.';
+            infoLabel.style.color = '#007aff';
         }
+    }
 
-        const interval = setInterval(() => {
-            progress += Math.floor(Math.random() * 4) + 1;
-
-            if (progress >= 100) {
-                progress = 100;
-                clearInterval(interval);
-
-                percentText.innerText = progress;
-                progressBar.style.width = progress + '%';
-
-                if (callback) {
-                    callback();
-                }
-            } else {
-                percentText.innerText = progress;
-                progressBar.style.width = progress + '%';
+    function onUpdateComplete() {
+        updateProgress(100, 'complete');
+        setTimeout(() => {
+            if (typeof Android !== 'undefined' && Android.restartApp) {
+                Android.restartApp();
             }
-        }, type === "download" ? 80 : 120);
+        }, 1500);
+    }
+
+    function onUpdateFailed(error) {
+        phaseLabel.innerText = '오류 발생';
+        infoLabel.innerText = '업데이트에 실패했습니다: ' + error;
+        infoLabel.style.color = '#f04452';
     }
 </script>
 
