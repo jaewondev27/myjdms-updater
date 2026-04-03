@@ -594,6 +594,110 @@
             100% { transform: rotate(360deg); }
         }
 
+        #version-modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+        }
+
+        #version-modal.show {
+            display: flex;
+        }
+
+        .version-modal-content {
+            background: white;
+            width: calc(100% - 48px);
+            max-width: 360px;
+            max-height: 70vh;
+            border-radius: 28px;
+            padding: 24px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .version-modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            text-align: center;
+            color: var(--text-main);
+        }
+
+        .version-list {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 16px;
+        }
+
+        .version-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            border-radius: 16px;
+            margin-bottom: 8px;
+            background: #f9fafb;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .version-item:active {
+            background: #e5e8eb;
+        }
+
+        .version-item.current {
+            background: var(--primary-light);
+        }
+
+        .version-item-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .version-item-badge {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--primary);
+            background: var(--primary-light);
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+
+        .version-item.current .version-item-badge {
+            background: var(--primary);
+            color: white;
+        }
+
+        .version-modal-close {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 22px;
+            background: var(--primary);
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .version-modal-close:active {
+            background: #2563c9;
+        }
+
+        .version-loading {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-mute);
+            font-size: 14px;
+        }
+
         #banner-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -935,7 +1039,7 @@
                 <i data-lucide="info" style="width: 24px; height: 24px; color: #191f28;"></i>
             </div>
             <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: -160px;">
-                <h1 style="font-size: 32px; font-weight: 700; margin: 0 0 12px 0; letter-spacing: -0.5px;">My JDMS</h1>
+                <h1 id="app-info-title" style="font-size: 32px; font-weight: 700; margin: 0 0 12px 0; letter-spacing: -0.5px; cursor: pointer; -webkit-tap-highlight-color: transparent;">My JDMS</h1>
                 <p id="app-info-version" style="font-size: 15px; color: #8b95a1; margin: 0 0 4px 0;">버전 1.0.0</p>
                 <p style="font-size: 15px; color: #8b95a1; margin: 0 0 12px 0;">made by 신재원</p>
                 <p id="app-info-status" style="font-size: 15px; color: #8b95a1; margin: 0 0 16px 0;">최신 버전입니다.</p>
@@ -952,6 +1056,16 @@
             </div>
             <div style="padding: 24px 24px 60px 24px;">
                 <button style="width: 100%; padding: 18px; border-radius: 24px; background: #f2f4f6; color: #191f28; font-size: 16px; font-weight: 600; border: none; cursor: pointer; -webkit-tap-highlight-color: transparent;">오픈소스 라이선스</button>
+            </div>
+        </div>
+
+        <div id="version-modal">
+            <div class="version-modal-content">
+                <div class="version-modal-title">버전 선택</div>
+                <div id="version-list" class="version-list">
+                    <div class="version-loading">버전을 불러오는 중...</div>
+                </div>
+                <button class="version-modal-close" onclick="window.closeVersionModal()">닫기</button>
             </div>
         </div>
     </div>
@@ -1307,6 +1421,68 @@
                     localStorage.setItem(APP_VERSION_KEY, storedVersion);
                 }
             }
+
+            let titleTapCount = 0;
+            let titleTapTimer = null;
+            const appInfoTitle = document.getElementById('app-info-title');
+            if (appInfoTitle) {
+                appInfoTitle.addEventListener('click', () => {
+                    titleTapCount++;
+                    if (titleTapTimer) clearTimeout(titleTapTimer);
+                    titleTapTimer = setTimeout(() => {
+                        titleTapCount = 0;
+                    }, 500);
+                    if (titleTapCount >= 5) {
+                        titleTapCount = 0;
+                        window.showVersionSelector();
+                    }
+                });
+            }
+
+            window.showVersionSelector = async function() {
+                const modal = document.getElementById('version-modal');
+                const listEl = document.getElementById('version-list');
+                modal.classList.add('show');
+                listEl.innerHTML = '<div class="version-loading">버전을 불러오는 중...</div>';
+
+                try {
+                    const versions = await fetchAvailableVersions();
+                    const currentVersion = getCurrentVersion();
+
+                    if (versions.length === 0) {
+                        listEl.innerHTML = '<div class="version-loading">사용 가능한 버전이 없습니다.</div>';
+                        return;
+                    }
+
+                    let html = '';
+                    versions.forEach(v => {
+                        const isCurrent = v === currentVersion;
+                        html += `<div class="version-item ${isCurrent ? 'current' : ''}" onclick="window.selectVersion('${v}')">
+                            <span class="version-item-label">${v}</span>
+                            <span class="version-item-badge">${isCurrent ? '현재' : (compareVersions(v, currentVersion) > 0 ? '최신' : '이전')}</span>
+                        </div>`;
+                    });
+                    listEl.innerHTML = html;
+                } catch (e) {
+                    listEl.innerHTML = '<div class="version-loading">버전 목록을 불러오지 못했습니다.</div>';
+                }
+            };
+
+            window.closeVersionModal = function() {
+                document.getElementById('version-modal').classList.remove('show');
+            };
+
+            window.selectVersion = function(version) {
+                window.closeVersionModal();
+                const currentVersion = getCurrentVersion();
+                if (version === currentVersion) {
+                    alert('이미 현재 버전입니다.');
+                    return;
+                }
+                if (typeof AndroidInterface !== 'undefined' && AndroidInterface.showUpdatePage) {
+                    AndroidInterface.showUpdatePage(version);
+                }
+            };
         });
     </script>
 </body>
