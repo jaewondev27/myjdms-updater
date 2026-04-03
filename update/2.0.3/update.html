@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>앱 업데이트</title>
+    <script src="https://cdn.jsdelivr.net/gh/jaewondev27/one-ui-8-loader/oneui8-loader.js"></script>
+    <style>
+        :root {
+            --samsung-blue: #007aff;
+            --bg-gray: #f4f4f4;
+            --text-main: #1a1a1a;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Samsung One", "Segoe UI", sans-serif;
+            background-color: var(--bg-gray);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* 1. 커스텀 모달 (중앙 상단 배치) */
+        #updateModal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 0 24px;
+            box-sizing: border-box;
+        }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 340px;
+            border-radius: 28px;
+            padding: 28px 24px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            text-align: center;
+        }
+
+        .modal-title { font-size: 20px; font-weight: 600; margin-bottom: 12px; color: var(--text-main); }
+        .modal-body { font-size: 15px; color: #555; margin-bottom: 28px; line-height: 1.5; }
+        
+        .modal-buttons { display: flex; gap: 10px; }
+        .modal-btn {
+            flex: 1; padding: 14px; border: none; border-radius: 22px;
+            font-size: 15px; font-weight: 600; cursor: pointer;
+        }
+        .btn-cancel { background: #eee; color: #000; }
+        .btn-confirm { background: var(--samsung-blue); color: white; }
+
+        /* 2. 업데이트 메인 화면 */
+        .update-container {
+            width: 100%;
+            max-width: 450px;
+            height: 100%;
+            background: white;
+            display: none; 
+            flex-direction: column;
+            padding: 80px 24px;
+            box-sizing: border-box;
+        }
+
+        .header-title { font-size: 26px; font-weight: 600; text-align: center; margin-bottom: 8px; color: var(--text-main); }
+        .header-subtitle { font-size: 14px; color: #666; text-align: center; margin-bottom: 60px; }
+
+        /* 로딩 애니메이션 고정 */
+        .loader-wrapper { margin: 40px auto; display: flex; justify-content: center; align-items: center; }
+        oneui8-loader { animation: none !important; transform: rotate(0deg) !important; }
+
+        /* 하단 상태 영역 */
+        .status-container { margin-top: auto; padding-bottom: 60px; }
+        .phase-label { font-size: 14px; font-weight: 600; color: var(--samsung-blue); margin-bottom: 8px; }
+        .percent-text { font-size: 56px; font-weight: 300; margin-bottom: 15px; color: var(--text-main); }
+
+        .progress-track { width: 100%; height: 6px; background: #f0f0f0; border-radius: 10px; overflow: hidden; }
+        .progress-fill {
+            width: 0%; height: 100%;
+            background: linear-gradient(90deg, #007aff, #00c6ff);
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .info-text { font-size: 13px; color: #888; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+<div id="updateModal">
+    <div class="modal-content">
+        <div class="modal-title">앱 업데이트</div>
+        <div class="modal-body">새로운 기능과 개선사항이 포함된<br>업데이트를 설치하시겠습니까?</div>
+        <div class="modal-buttons">
+            <button class="modal-btn btn-cancel" onclick="closeModal()">취소</button>
+            <button class="modal-btn btn-confirm" onclick="startUpdateProcess()">업데이트</button>
+        </div>
+    </div>
+</div>
+
+<div class="update-container" id="updateUI">
+    <div class="header-title" id="mainTitle">앱 업데이트 중...</div>
+    <div class="header-subtitle" id="subTitle">최적의 성능을 위해 잠시만 기다려 주세요.</div>
+
+    <div class="loader-wrapper">
+        <oneui8-loader size="4" speed="3.0"></oneui8-loader>
+    </div>
+
+    <div class="status-container">
+        <div id="phaseLabel" class="phase-label">다운로드 중</div>
+        <div class="percent-text"><span id="percent">0</span>%</div>
+        <div class="progress-track">
+            <div class="progress-fill" id="progressBar"></div>
+        </div>
+        <div id="infoLabel" class="info-text">업데이트 파일을 안전하게 가져오고 있습니다.</div>
+    </div>
+</div>
+
+<script>
+    const modal = document.getElementById('updateModal');
+    const updateUI = document.getElementById('updateUI');
+    const percentText = document.getElementById('percent');
+    const progressBar = document.getElementById('progressBar');
+    const phaseLabel = document.getElementById('phaseLabel');
+    const infoLabel = document.getElementById('infoLabel');
+    const mainTitle = document.getElementById('mainTitle');
+
+    let newVersion = '';
+    let currentVersion = '';
+
+    function closeModal() {
+        if (typeof Android !== 'undefined' && Android.closeUpdate) {
+            Android.closeUpdate();
+        }
+    }
+
+    window.setVersions = function(newVer, currentVer) {
+        newVersion = newVer;
+        currentVersion = currentVer;
+    };
+
+    function startUpdateProcess() {
+        modal.style.display = 'none';
+        updateUI.style.display = 'flex';
+
+        if (typeof Android !== 'undefined' && Android.downloadFiles) {
+            Android.downloadFiles(newVersion);
+        }
+    }
+
+    function updateProgress(percent, phase) {
+        percentText.innerText = percent;
+        progressBar.style.width = percent + '%';
+        if (phase === 'download') {
+            phaseLabel.innerText = '다운로드 중';
+            infoLabel.innerText = '업데이트 파일을 다운로드하는 중입니다...';
+        } else if (phase === 'install') {
+            phaseLabel.innerText = '설치 중';
+            infoLabel.innerText = '파일을 적용하고 있습니다...';
+            mainTitle.innerText = '앱 설치 중...';
+        } else if (phase === 'complete') {
+            phaseLabel.innerText = '완료됨';
+            infoLabel.innerText = '업데이트가 성공적으로 완료되었습니다.';
+            infoLabel.style.color = '#007aff';
+        }
+    }
+
+    function onUpdateComplete() {
+        updateProgress(100, 'complete');
+        setTimeout(() => {
+            if (typeof Android !== 'undefined' && Android.restartApp) {
+                Android.restartApp();
+            }
+        }, 1500);
+    }
+
+    function onUpdateFailed(error) {
+        phaseLabel.innerText = '오류 발생';
+        infoLabel.innerText = '업데이트에 실패했습니다: ' + error;
+        infoLabel.style.color = '#f04452';
+    }
+</script>
+
+</body>
+</html>
