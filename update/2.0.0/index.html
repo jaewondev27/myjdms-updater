@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>My JDMS</title>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -32,8 +32,6 @@
 
         html, body {
             overscroll-behavior-y: none;
-            height: 100%;
-            width: 100%;
         }
 
         body {
@@ -44,11 +42,8 @@
             color: var(--text-main);
             user-select: none;
             overflow-x: hidden;
-            overflow-y: auto;
-            height: 100%;
-            width: 100%;
-            padding-top: calc(env(safe-area-inset-top) + 10px);
-            padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
+            padding-top: calc(env(safe-area-inset-top) + 20px);
+            padding-bottom: env(safe-area-inset-bottom);
             padding-left: env(safe-area-inset-left);
             padding-right: env(safe-area-inset-right);
         }
@@ -594,6 +589,11 @@
             100% { left: 150%; }
         }
 
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         #banner-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -893,6 +893,10 @@
                     <i data-lucide="utensils"></i>
                     <span>급식</span>
                 </div>
+                <div class="nav-item" data-page="band">
+                    <i data-lucide="users"></i>
+                    <span>밴드</span>
+                </div>
                 <div class="nav-item" data-page="more">
                     <i data-lucide="menu"></i>
                     <span>더보기</span>
@@ -912,6 +916,10 @@
                     <i data-lucide="utensils"></i>
                     <span>급식</span>
                 </div>
+                <div class="floating-tab-item" data-float-page="band">
+                    <i data-lucide="users"></i>
+                    <span>밴드</span>
+                </div>
                 <div class="floating-tab-item" data-float-page="more">
                     <i data-lucide="menu"></i>
                     <span>더보기</span>
@@ -927,30 +935,23 @@
                 <i data-lucide="info" style="width: 24px; height: 24px; color: #191f28;"></i>
             </div>
             <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: -160px;">
-                <h1 id="app-info-title" style="font-size: 32px; font-weight: 700; margin: 0 0 12px 0; letter-spacing: -0.5px; cursor: pointer;">My JDMS</h1>
-                <p style="font-size: 15px; color: #8b95a1; margin: 0 0 4px 0;" id="app-version-display">버전 1.0.0</p>
+                <h1 style="font-size: 32px; font-weight: 700; margin: 0 0 12px 0; letter-spacing: -0.5px;">My JDMS</h1>
+                <p id="app-info-version" style="font-size: 15px; color: #8b95a1; margin: 0 0 4px 0;">버전 1.0.0</p>
                 <p style="font-size: 15px; color: #8b95a1; margin: 0 0 12px 0;">made by 신재원</p>
-                <p style="font-size: 15px; color: #8b95a1; margin: 0;" id="update-status">최신 버전입니다.</p>
+                <p id="app-info-status" style="font-size: 15px; color: #8b95a1; margin: 0 0 16px 0;">최신 버전입니다.</p>
+                <div id="app-info-loading" style="display: none; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 16px;">
+                    <div style="width: 24px; height: 24px; position: relative;">
+                        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 3px solid #e5e8eb; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+                    </div>
+                    <span style="font-size: 13px; color: var(--text-mute);">업데이트 확인 중...</span>
+                </div>
+                <button id="update-check-btn" onclick="window.checkForUpdates()" style="width: 100%; max-width: 200px; padding: 12px; border-radius: 24px; background: var(--primary); color: #ffffff; font-size: 14px; font-weight: 600; border: none; cursor: pointer; -webkit-tap-highlight-color: transparent; display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 16px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/><polyline points="21 3 21 9 15 9"/></svg>
+                    업데이트 확인
+                </button>
             </div>
             <div style="padding: 24px 24px 60px 24px;">
-                <button id="update-check-btn" class="menu-btn" onclick="handleUpdateCheckClick()" style="text-align: center;">업데이트 확인</button>
-            </div>
-        </div>
-
-        <!-- Custom Modal -->
-        <div id="custom-modal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;display:none;justify-content:center;align-items:center;opacity:0;transition:opacity 0.3s ease;">
-            <div id="custom-modal-content" style="background:#ffffff;border-radius:24px;padding:24px;width:90%;max-width:360px;box-shadow:0 10px 40px rgba(0,0,0,0.2);transform:scale(0.9);transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);">
-                <div id="modal-content" style="text-align:center;margin-bottom:20px;"></div>
-                <div id="modal-buttons" style="display:flex;gap:12px;justify-content:center;"></div>
-            </div>
-        </div>
-
-        <!-- Version Selection Modal -->
-        <div id="version-modal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10001;display:none;justify-content:center;align-items:center;opacity:0;transition:opacity 0.3s ease;">
-            <div id="version-modal-content" style="background:#ffffff;border-radius:24px;padding:24px;width:90%;max-width:400px;max-height:70vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.2);transform:scale(0.9);transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);">
-                <h2 style="font-size:20px;font-weight:700;margin:0 0 16px 0;text-align:center;">버전 선택</h2>
-                <div id="version-list" style="display:flex;flex-direction:column;gap:8px;max-height:400px;overflow-y:auto;"></div>
-                <button onclick="closeVersionModal()" style="width:100%;padding:16px;margin-top:16px;border-radius:16px;background:#f2f4f6;color:#191f28;font-size:16px;font-weight:600;border:none;cursor:pointer;">취소</button>
+                <button style="width: 100%; padding: 18px; border-radius: 24px; background: #f2f4f6; color: #191f28; font-size: 16px; font-weight: 600; border: none; cursor: pointer; -webkit-tap-highlight-color: transparent;">오픈소스 라이선스</button>
             </div>
         </div>
     </div>
@@ -1211,261 +1212,101 @@
             function loadWeeklyTimetableIframe() { safeLoadIframe('weekly-timetable-iframe', `https://sigan.onrender.com/sigan?grade=${userData.grade}&class=${userData.class}`); }
             function loadLunchIframe() { safeLoadIframe('lunch-iframe', `https://sigan.onrender.com/lunch?grade=${userData.grade}&class=${userData.class}`); }
 
-            // 앱 버전 업데이트 함수 (Android 에서 호출)
-            window.updateAppVersion = function(version) {
-                document.getElementById('app-version-display').innerText = '버전 ' + version;
-                currentAppVersion = version;
-                checkForUpdatesOnLaunch();
-            };
+            const APP_VERSION_KEY = 'app_version';
+            const DEFAULT_VERSION = '1.0.0';
+            const GITHUB_UPDATE_URL = 'https://api.github.com/repos/jaewondev27/myjdms-updater/contents/update';
 
-            let currentAppVersion = '1.0.0';
-            let updateCheckLongPressTimer = null;
-            let devModeTapCount = 0;
-            let devModeTapTimer = null;
-
-            // 커스텀 모달 함수 (애니메이션 추가)
-            function showModal(content, buttons) {
-                const modal = document.getElementById('custom-modal');
-                const modalContent = document.getElementById('custom-modal-content');
-                const modalContentInner = document.getElementById('modal-content');
-                const modalButtons = document.getElementById('modal-buttons');
-                
-                modalContentInner.innerHTML = content;
-                modalButtons.innerHTML = '';
-                
-                buttons.forEach(btn => {
-                    const button = document.createElement('button');
-                    button.style.cssText = 'flex:1;padding:16px;border-radius:16px;font-size:16px;font-weight:600;border:none;cursor:pointer;transition:transform 0.1s;';
-                    if (btn.type === 'confirm') {
-                        button.style.background = '#007aff';
-                        button.style.color = '#ffffff';
-                    } else {
-                        button.style.background = '#f2f4f6';
-                        button.style.color = '#191f28';
-                    }
-                    button.innerText = btn.text;
-                    button.onclick = function() {
-                        hideModal();
-                        if (btn.action) btn.action();
-                    };
-                    button.addEventListener('touchstart', function() {
-                        this.style.transform = 'scale(0.95)';
-                    }, {passive: true});
-                    button.addEventListener('touchend', function() {
-                        this.style.transform = 'scale(1)';
-                    }, {passive: true});
-                    modalButtons.appendChild(button);
-                });
-                
-                modal.style.display = 'flex';
-                setTimeout(() => {
-                    modal.style.opacity = '1';
-                    modalContent.style.transform = 'scale(1)';
-                }, 10);
+            function getCurrentVersion() {
+                return localStorage.getItem(APP_VERSION_KEY) || DEFAULT_VERSION;
             }
 
-            function hideModal() {
-                const modal = document.getElementById('custom-modal');
-                const modalContent = document.getElementById('custom-modal-content');
-                modal.style.opacity = '0';
-                modalContent.style.transform = 'scale(0.9)';
-                setTimeout(() => {
-                    modal.style.display = 'none';
-                }, 300);
-            }
-
-            // 버전 선택 모달 표시 (애니메이션 추가)
-            function showVersionSelectionModal(versions) {
-                const modal = document.getElementById('version-modal');
-                const modalContent = document.getElementById('version-modal-content');
-                const versionList = document.getElementById('version-list');
-                versionList.innerHTML = '';
-                
-                versions.forEach(ver => {
-                    const item = document.createElement('button');
-                    item.style.cssText = 'padding:16px;border-radius:16px;background:#f2f4f6;color:#191f28;font-size:16px;font-weight:600;border:none;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;transition:transform 0.1s;';
-                    
-                    let badge = '';
-                    if (ver === currentAppVersion) {
-                        badge = '<span style="font-size:12px;color:#8b95a1;">현재 버전</span>';
-                        item.style.opacity = '0.6';
-                    } else if (isVersionHigher(ver, currentAppVersion)) {
-                        badge = '<span style="font-size:12px;color:#007aff;">최신</span>';
-                    } else {
-                        badge = '<span style="font-size:12px;color:#f59e0b;">다운그레이드</span>';
-                    }
-                    
-                    item.innerHTML = `<span>버전 ${ver}</span>${badge}`;
-                    item.onclick = function() {
-                        if (ver !== currentAppVersion) {
-                            hideVersionModal();
-                            startUpdateWithVersion(ver);
-                        }
-                    };
-                    item.addEventListener('touchstart', function() {
-                        this.style.transform = 'scale(0.98)';
-                    }, {passive: true});
-                    item.addEventListener('touchend', function() {
-                        this.style.transform = 'scale(1)';
-                    }, {passive: true});
-                    versionList.appendChild(item);
-                });
-                
-                modal.style.display = 'flex';
-                setTimeout(() => {
-                    modal.style.opacity = '1';
-                    modalContent.style.transform = 'scale(1)';
-                }, 10);
-            }
-
-            function hideVersionModal() {
-                const modal = document.getElementById('version-modal');
-                const modalContent = document.getElementById('version-modal-content');
-                modal.style.opacity = '0';
-                modalContent.style.transform = 'scale(0.9)';
-                setTimeout(() => {
-                    modal.style.display = 'none';
-                }, 300);
-            }
-
-            function closeVersionModal() {
-                hideVersionModal();
-            }
-
-            // 개발자 모드 버튼 표시/숨김
-            function hideDevModeButton() {
-                const devBtn = document.getElementById('dev-mode-btn');
-                if (devBtn) {
-                    devBtn.style.opacity = '0';
-                    devBtn.style.transform = 'translateX(-50%) translateY(-20px)';
-                    devBtn.style.pointerEvents = 'none';
-                }
-            }
-
-            // 앱 정보 탭에서 업데이트 확인
-            window.checkUpdateFromAppInfo = function() {
-                if (typeof AndroidInterface !== 'undefined') {
-                    const newVersion = AndroidInterface.checkForUpdates();
-                    if (newVersion && newVersion !== '') {
-                        showUpdateDialog(newVersion);
-                    } else {
-                        document.getElementById('update-status').innerText = '최신 버전입니다.';
-                        showModal('최신 버전입니다.', [
-                            { text: '확인', type: 'confirm', action: () => {} }
-                        ]);
-                    }
-                }
-            };
-
-            function handleUpdateCheckClick() {
-                window.checkUpdateFromAppInfo();
-            }
-
-            // 개발자 모드: My JDMS 텍스트 여러번 탭
-            let myJdmsTapCount = 0;
-            let myJdmsTapTimer = null;
-            
-            const appInfoTitle = document.getElementById('app-info-title');
-            appInfoTitle.addEventListener('click', function() {
-                myJdmsTapCount++;
-                
-                if (myJdmsTapTimer) clearTimeout(myJdmsTapTimer);
-                myJdmsTapTimer = setTimeout(() => { myJdmsTapCount = 0; }, 3000);
-                
-                if (myJdmsTapCount >= 5) {
-                    myJdmsTapCount = 0;
-                    showAllVersionsModal();
-                }
-            });
-
-            // 모든 버전 표시 모달 (개발자 모드)
-            function showAllVersionsModal() {
-                if (typeof AndroidInterface !== 'undefined') {
-                    const versionsStr = AndroidInterface.checkForAllVersions();
-                    if (versionsStr && versionsStr !== '') {
-                        const versions = versionsStr.split(',');
-                        showVersionSelectionModal(versions);
-                    }
-                }
-            }
-
-            // 버전 비교 함수
-            function isVersionHigher(v1, v2) {
-                const parts1 = v1.split('.').map(p => parseInt(p) || 0);
-                const parts2 = v2.split('.').map(p => parseInt(p) || 0);
+            function compareVersions(v1, v2) {
+                const parts1 = v1.split('.').map(Number);
+                const parts2 = v2.split('.').map(Number);
                 for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
                     const p1 = parts1[i] || 0;
                     const p2 = parts2[i] || 0;
-                    if (p1 > p2) return true;
-                    if (p1 < p2) return false;
+                    if (p1 > p2) return 1;
+                    if (p1 < p2) return -1;
                 }
-                return false;
+                return 0;
             }
 
-            // 특정 버전 업데이트 시작
-            function startUpdateWithVersion(version) {
-                if (typeof AndroidInterface !== 'undefined') {
-                    AndroidInterface.startUpdate(version);
-                    showUpdateOverlay(version);
+            async function fetchAvailableVersions() {
+                try {
+                    const response = await fetch(GITHUB_UPDATE_URL);
+                    const data = await response.json();
+                    if (Array.isArray(data)) {
+                        return data
+                            .filter(item => item.type === 'dir' && /^\d+\.\d+\.\d+$/.test(item.name))
+                            .map(item => item.name)
+                            .sort((a, b) => compareVersions(b, a));
+                    }
+                    return [];
+                } catch (e) {
+                    console.error('Failed to fetch versions:', e);
+                    return [];
                 }
             }
 
-            // 업데이트 확인 함수
-            function checkForUpdatesOnLaunch() {
-                if (typeof AndroidInterface !== 'undefined') {
-                    const newVersion = AndroidInterface.checkForUpdates();
-                    if (newVersion && newVersion !== '') {
-                        showUpdateDialog(newVersion);
+            async function checkForUpdates() {
+                const loadingEl = document.getElementById('app-info-loading');
+                const statusEl = document.getElementById('app-info-status');
+                const btnEl = document.getElementById('update-check-btn');
+
+                loadingEl.style.display = 'flex';
+                statusEl.style.display = 'none';
+                btnEl.style.display = 'none';
+
+                try {
+                    const versions = await fetchAvailableVersions();
+                    const currentVersion = getCurrentVersion();
+                    const latestVersion = versions.length > 0 ? versions[0] : currentVersion;
+
+                    loadingEl.style.display = 'none';
+                    btnEl.style.display = 'flex';
+
+                    if (compareVersions(latestVersion, currentVersion) > 0) {
+                        statusEl.textContent = `새 버전 ${latestVersion}이(가) 있습니다.`;
+                        statusEl.style.color = '#3182f6';
+                        statusEl.style.display = 'block';
+                        if (typeof AndroidInterface !== 'undefined' && AndroidInterface.showUpdatePage) {
+                            AndroidInterface.showUpdatePage(latestVersion);
+                        }
+                    } else {
+                        statusEl.textContent = '최신 버전입니다.';
+                        statusEl.style.color = '#8b95a1';
+                        statusEl.style.display = 'block';
                     }
+                } catch (e) {
+                    loadingEl.style.display = 'none';
+                    btnEl.style.display = 'flex';
+                    statusEl.textContent = '업데이트 확인에 실패했습니다.';
+                    statusEl.style.color = '#f04452';
+                    statusEl.style.display = 'block';
                 }
             }
 
-            // 업데이트 다이얼로그 표시 (update.html 로드)
-            function showUpdateDialog(version) {
-                showModal(`최신 버전 (${version}) 이 있습니다.<br>업데이트를 할까요?`, [
-                    { text: '취소', type: 'cancel', action: () => {} },
-                    { text: '확인', type: 'confirm', action: () => startUpdateWithVersion(version) }
-                ]);
-            }
+            window.checkForUpdates = checkForUpdates;
 
-            // 업데이트 오버레이 표시
-            function showUpdateOverlay(version) {
-                const updateOverlay = document.createElement('div');
-                updateOverlay.id = 'update-overlay';
-                updateOverlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:9999;display:flex;justify-content:center;align-items:center;';
-                updateOverlay.innerHTML = '<iframe src="update.html" style="width:100%;height:100%;border:none;" id="update-frame"></iframe>';
-                document.body.appendChild(updateOverlay);
+            const originalOpenAppInfo = window.openAppInfo;
+            window.openAppInfo = function() {
+                document.getElementById('app-info-panel').classList.add('open');
+                const currentVersion = getCurrentVersion();
+                document.getElementById('app-info-version').textContent = `버전 ${currentVersion}`;
+                document.getElementById('app-info-status').textContent = '최신 버전입니다.';
+                document.getElementById('app-info-status').style.color = '#8b95a1';
+                document.getElementById('app-info-loading').style.display = 'none';
+                document.getElementById('update-check-btn').style.display = 'flex';
+                checkForUpdates();
+            };
 
-                window.updateProgress = function(progress, status) {
-                    const frame = document.getElementById('update-frame');
-                    if (frame && frame.contentWindow) {
-                        frame.contentWindow.postMessage({ type: 'progress', progress: progress, status: status }, '*');
-                    }
-                };
-
-                window.updateComplete = function(success, message) {
-                    const frame = document.getElementById('update-frame');
-                    if (frame && frame.contentWindow) {
-                        frame.contentWindow.postMessage({ type: 'complete', success: success, message: message }, '*');
-                    }
-                };
-            }
-
-            // update.html 에서 메시지 수신
-            window.addEventListener('message', function(event) {
-                if (event.data && event.data.type === 'startUpdate') {
-                    // 이미 Android 에서 업데이트 시작됨
-                } else if (event.data && event.data.type === 'cancelUpdate') {
-                    const overlay = document.getElementById('update-overlay');
-                    if (overlay) overlay.remove();
-                } else if (event.data && event.data.type === 'updateFinished') {
-                    const overlay = document.getElementById('update-overlay');
-                    if (overlay) {
-                        // 업데이트 완료 후 오버레이 즉시 제거 (앱 재시작)
-                        overlay.remove();
-                    }
+            if (typeof AndroidInterface !== 'undefined' && AndroidInterface.getVersion) {
+                const storedVersion = AndroidInterface.getVersion();
+                if (storedVersion) {
+                    localStorage.setItem(APP_VERSION_KEY, storedVersion);
                 }
-            });
+            }
         });
     </script>
 </body>
